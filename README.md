@@ -13,6 +13,7 @@ Please visit Codeberg page for getting the latest download and changes.
 
 ## Feature
 - Linux Upstream: `4.19.y`/`4.19.275`
+- OpenHarmony: `3.1-Release`
 - ACK code branch: `android-4.19-stable`/`4.19.274`
     - Extra: `android-trusty-4.19`
 - CLO code tag: `LA.UM.9.12.r1-15100-SMxx50.QSSI13.0`
@@ -27,7 +28,9 @@ Please visit Codeberg page for getting the latest download and changes.
 - Supported: `devfreq`, `kprofile`
 
 ## Problem
-- Not for now
+**WARNING: THE KERNEL OF THIS BRANCH HAS NOT BEEN TESTED! DO NOT USE IT!**
+
+**ONLY FOR TEST! DO NOT USE IT ON YOUR PHONE!**
 
 ## Install
 ### In Kernel Flasher App
