@@ -4240,17 +4240,25 @@ static int check_swap_activate(struct swap_info_struct *sis,
 	struct address_space *mapping = swap_file->f_mapping;
 	struct inode *inode = mapping->host;
 	struct f2fs_sb_info *sbi = F2FS_I_SB(inode);
+	sector_t probe_block;
+	sector_t last_block;
 	sector_t cur_lblock;
 	sector_t last_lblock;
 	sector_t pblock;
 	sector_t lowest_pblock = -1;
 	sector_t highest_pblock = 0;
 	int nr_extents = 0;
+	unsigned blocks_per_page;
+	unsigned blkbits;
 	unsigned long nr_pblocks;
+	unsigned long page_no;
 	unsigned int blks_per_sec = BLKS_PER_SEC(sbi);
 	unsigned int sec_blks_mask = BLKS_PER_SEC(sbi) - 1;
 	unsigned int not_aligned = 0;
 	int ret = 0;
+
+	blkbits = inode->i_blkbits;
+	blocks_per_page = PAGE_SIZE >> blkbits;
 
 	/*
 	 * Map all the blocks into the extent list.  This code doesn't try

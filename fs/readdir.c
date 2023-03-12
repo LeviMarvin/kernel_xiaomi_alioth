@@ -20,8 +20,22 @@
 #include <linux/syscalls.h>
 #include <linux/unistd.h>
 #include <linux/compat.h>
-
 #include <linux/uaccess.h>
+
+#include <asm/unaligned.h>
+
+/*
+ * Note the "unsafe_put_user() semantics: we goto a
+ * label for errors.
+ */
+#define unsafe_copy_dirent_name(_dst, _src, _len, label) do {	\
+	char __user *dst = (_dst);				\
+	const char *src = (_src);				\
+	size_t len = (_len);					\
+	unsafe_put_user(0, dst+len, label);			\
+	unsafe_copy_to_user(dst, src, len, label);		\
+} while (0)
+
 
 int iterate_dir(struct file *file, struct dir_context *ctx)
 {
@@ -222,28 +236,31 @@ static int filldir(struct dir_context *ctx, const char *name, int namlen,
 		return -EOVERFLOW;
 	}
 	dirent = buf->previous;
-	if (dirent) {
-		if (signal_pending(current))
-			return -EINTR;
-		if (__put_user(offset, &dirent->d_off))
-			goto efault;
-	}
+	if (dirent && signal_pending(current))
+		return -EINTR;
+
+	/*
+	 * Note! This range-checks 'previous' (which may be NULL).
+	 * The real range was checked in getdents
+	 */
+	if (!user_access_begin(VERIFY_WRITE, dirent, sizeof(*dirent)))
+		goto efault;
+	if (dirent)
+		unsafe_put_user(offset, &dirent->d_off, efault_end);
 	dirent = buf->current_dir;
-	if (__put_user(d_ino, &dirent->d_ino))
-		goto efault;
-	if (__put_user(reclen, &dirent->d_reclen))
-		goto efault;
-	if (copy_to_user(dirent->d_name, name, namlen))
-		goto efault;
-	if (__put_user(0, dirent->d_name + namlen))
-		goto efault;
-	if (__put_user(d_type, (char __user *) dirent + reclen - 1))
-		goto efault;
+	unsafe_put_user(d_ino, &dirent->d_ino, efault_end);
+	unsafe_put_user(reclen, &dirent->d_reclen, efault_end);
+	unsafe_put_user(d_type, (char __user *) dirent + reclen - 1, efault_end);
+	unsafe_copy_dirent_name(dirent->d_name, name, namlen, efault_end);
+	user_access_end();
+
 	buf->previous = dirent;
 	dirent = (void __user *)dirent + reclen;
 	buf->current_dir = dirent;
 	buf->count -= reclen;
 	return 0;
+efault_end:
+	user_access_end();
 efault:
 	buf->error = -EFAULT;
 	return -EFAULT;
@@ -306,30 +323,31 @@ static int filldir64(struct dir_context *ctx, const char *name, int namlen,
 	if (reclen > buf->count)
 		return -EINVAL;
 	dirent = buf->previous;
-	if (dirent) {
-		if (signal_pending(current))
-			return -EINTR;
-		if (__put_user(offset, &dirent->d_off))
-			goto efault;
-	}
+	if (dirent && signal_pending(current))
+		return -EINTR;
+
+	/*
+	 * Note! This range-checks 'previous' (which may be NULL).
+	 * The real range was checked in getdents
+	 */
+	if (!user_access_begin(VERIFY_WRITE, dirent, sizeof(*dirent)))
+		goto efault;
+	if (dirent)
+		unsafe_put_user(offset, &dirent->d_off, efault_end);
 	dirent = buf->current_dir;
-	if (__put_user(ino, &dirent->d_ino))
-		goto efault;
-	if (__put_user(0, &dirent->d_off))
-		goto efault;
-	if (__put_user(reclen, &dirent->d_reclen))
-		goto efault;
-	if (__put_user(d_type, &dirent->d_type))
-		goto efault;
-	if (copy_to_user(dirent->d_name, name, namlen))
-		goto efault;
-	if (__put_user(0, dirent->d_name + namlen))
-		goto efault;
+	unsafe_put_user(ino, &dirent->d_ino, efault_end);
+	unsafe_put_user(reclen, &dirent->d_reclen, efault_end);
+	unsafe_put_user(d_type, &dirent->d_type, efault_end);
+	unsafe_copy_dirent_name(dirent->d_name, name, namlen, efault_end);
+	user_access_end();
+
 	buf->previous = dirent;
 	dirent = (void __user *)dirent + reclen;
 	buf->current_dir = dirent;
 	buf->count -= reclen;
 	return 0;
+efault_end:
+	user_access_end();
 efault:
 	buf->error = -EFAULT;
 	return -EFAULT;

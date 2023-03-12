@@ -3980,6 +3980,7 @@ retry:
 	 */
 	if (!test_bit(BTRFS_FS_STATE_ERROR, &fs_info->fs_state)) {
 		ret = flush_write_bio(&epd);
+		flush_write_bio(&epd);
 	} else {
 		ret = -EUCLEAN;
 		end_write_bio(&epd, ret);

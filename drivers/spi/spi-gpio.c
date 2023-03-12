@@ -361,6 +361,11 @@ static inline int spi_gpio_probe_dt(struct platform_device *pdev)
 }
 #endif
 
+static void spi_gpio_put(void *data)
+{
+	spi_master_put(data);
+}
+
 static int spi_gpio_probe(struct platform_device *pdev)
 {
 	int				status;
@@ -385,6 +390,12 @@ static int spi_gpio_probe(struct platform_device *pdev)
 	master = devm_spi_alloc_master(&pdev->dev, sizeof(*spi_gpio));
 	if (!master)
 		return -ENOMEM;
+
+	status = devm_add_action_or_reset(&pdev->dev, spi_gpio_put, master);
+	if (status) {
+		spi_master_put(master);
+		return status;
+	}
 
 	spi_gpio = spi_master_get_devdata(master);
 
@@ -451,8 +462,6 @@ static int spi_gpio_remove(struct platform_device *pdev)
 
 	/* stop() unregisters child devices too */
 	spi_bitbang_stop(&spi_gpio->bitbang);
-
-	spi_master_put(spi_gpio->bitbang.master);
 
 	return 0;
 }

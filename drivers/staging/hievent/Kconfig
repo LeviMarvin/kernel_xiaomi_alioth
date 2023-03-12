@@ -1,0 +1,4 @@
+config HIEVENT
+    tristate "Enable hievent"
+    help
+	hievent buffer manager

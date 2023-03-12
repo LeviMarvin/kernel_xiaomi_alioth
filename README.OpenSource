@@ -1,0 +1,11 @@
+[
+    {
+        "Name": "linux-4.19",
+        "License": "GPL-2.0+",
+        "License File": "COPYING",
+        "Version Number": "4.19.155",
+        "Owner": "liuyu82@huawei.com",
+        "Upstream URL": "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/log/?h=linux-4.19.y",
+        "Description": "linux kernel 4.19"
+    }
+]

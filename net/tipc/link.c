@@ -1669,6 +1669,9 @@ static int tipc_link_proto_rcv(struct tipc_link *l, struct sk_buff *skb,
 				rc = TIPC_LINK_UP_EVT;
 			break;
 		}
+
+		if (glen > dlen)
+			break;
 		tipc_mon_rcv(l->net, data, dlen, l->addr,
 			     &l->mon_state, l->bearer_id);
 

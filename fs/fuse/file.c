@@ -1339,10 +1339,12 @@ static int fuse_get_user_pages(struct fuse_req *req, struct iov_iter *ii,
 	}
 
 	req->user_pages = true;
-	if (write)
+	if (write) {
+		req->in.user_pages = 1;
 		req->in.argpages = 1;
-	else
+	} else {
 		req->out.argpages = 1;
+	}
 
 	*nbytesp = nbytes;
 
