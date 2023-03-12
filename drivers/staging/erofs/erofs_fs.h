@@ -13,6 +13,9 @@
 #ifndef __EROFS_FS_H
 #define __EROFS_FS_H
 
+#include <linux/types.h>
+#include <linux/bug.h>
+
 /* Enhanced(Extended) ROM File System */
 #define EROFS_SUPER_MAGIC_V1    0xE0F5E1E2
 #define EROFS_SUPER_OFFSET      1024
